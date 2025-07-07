@@ -19,6 +19,12 @@
         "bed_temp": 60,
         "description": "Bambu Lab PLA Silk Series"
       },
+      "PLA-CF": {
+        "spool_weight": 260,
+        "extruder_temp": 230,
+        "bed_temp": 60,
+        "description": "Bambu PLA-CF carbon fiber reinforced PLA"
+      },
       "PETG Basic": {
         "spool_weight": 260,
         "extruder_temp": 250,
@@ -36,6 +42,12 @@
         "extruder_temp": 230,
         "bed_temp": 45,
         "description": "Bambu Lab TPU 95A Series"
+      },
+      "PA6-GF": {
+        "spool_weight": 260,
+        "extruder_temp": 290,
+        "bed_temp": 100,
+        "description": "Nylon 6 with Glass Fiber Reinforcement"
       }
     },
     "Prusa": {
