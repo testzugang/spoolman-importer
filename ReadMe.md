@@ -248,6 +248,42 @@ Options:
 Choose option [r/s/1-7]: 
 ```
 
+## Data Management
+
+### Deleting All Spools
+
+To delete all spools from your Spoolman instance, use the `delete_all_spools.sh` script.
+
+**Usage:**
+```bash
+./scripts/delete_all_spools.sh [SPOOLMAN_URL]
+```
+
+**Example:**
+```bash
+./scripts/delete_all_spools.sh http://localhost:7912
+```
+
+The script will prompt for confirmation before deleting anything.
+
+### Deleting All Filaments
+
+To delete all filaments from your Spoolman instance, use the `delete_all_filaments.sh` script.
+
+**Usage:**
+```bash
+./scripts/delete_all_filaments.sh [SPOOLMAN_URL]
+```
+
+**Example:**
+```bash
+./scripts/delete_all_filaments.sh http://localhost:7912
+```
+
+The script will prompt for confirmation before deleting anything.
+
+**Note:** Deleting a filament will also delete all of its associated spools.
+
 ## Testing
 
 To run the test suite, first install the test dependencies from `src/requirements-dev.txt`.
