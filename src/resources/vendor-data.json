@@ -1,0 +1,234 @@
+{
+  "vendors": {
+    "Bambu Lab": {
+      "PLA Basic": {
+        "spool_weight": 260,
+        "extruder_temp": 230,
+        "bed_temp": 60,
+        "description": "Bambu Lab PLA Basic Series"
+      },
+      "PLA Matte": {
+        "spool_weight": 260,
+        "extruder_temp": 230,
+        "bed_temp": 60,
+        "description": "Bambu Lab PLA Matte Series"
+      },
+      "PLA Silk": {
+        "spool_weight": 260,
+        "extruder_temp": 230,
+        "bed_temp": 60,
+        "description": "Bambu Lab PLA Silk Series"
+      },
+      "PETG Basic": {
+        "spool_weight": 260,
+        "extruder_temp": 250,
+        "bed_temp": 80,
+        "description": "Bambu Lab PETG Basic Series"
+      },
+      "ABS": {
+        "spool_weight": 260,
+        "extruder_temp": 270,
+        "bed_temp": 90,
+        "description": "Bambu Lab ABS Series"
+      },
+      "TPU 95A": {
+        "spool_weight": 260,
+        "extruder_temp": 230,
+        "bed_temp": 45,
+        "description": "Bambu Lab TPU 95A Series"
+      }
+    },
+    "Prusa": {
+      "PLA": {
+        "spool_weight": 230,
+        "extruder_temp": 215,
+        "bed_temp": 60,
+        "description": "Prusa PLA Prusament"
+      },
+      "PETG": {
+        "spool_weight": 230,
+        "extruder_temp": 250,
+        "bed_temp": 85,
+        "description": "Prusa PETG Prusament"
+      },
+      "ASA": {
+        "spool_weight": 230,
+        "extruder_temp": 260,
+        "bed_temp": 100,
+        "description": "Prusa ASA Prusament"
+      },
+      "ABS": {
+        "spool_weight": 230,
+        "extruder_temp": 255,
+        "bed_temp": 100,
+        "description": "Prusa ABS Prusament"
+      },
+      "PC Blend": {
+        "spool_weight": 230,
+        "extruder_temp": 275,
+        "bed_temp": 100,
+        "description": "Prusa PC Blend Prusament"
+      }
+    },
+    "eSUN": {
+      "PLA+": {
+        "spool_weight": 240,
+        "extruder_temp": 210,
+        "bed_temp": 60,
+        "description": "eSUN PLA+ Enhanced PLA"
+      },
+      "PETG": {
+        "spool_weight": 240,
+        "extruder_temp": 230,
+        "bed_temp": 80,
+        "description": "eSUN PETG"
+      },
+      "ABS+": {
+        "spool_weight": 240,
+        "extruder_temp": 250,
+        "bed_temp": 90,
+        "description": "eSUN ABS+ Enhanced ABS"
+      },
+      "SILK PLA": {
+        "spool_weight": 240,
+        "extruder_temp": 210,
+        "bed_temp": 60,
+        "description": "eSUN SILK PLA"
+      },
+      "Wood PLA": {
+        "spool_weight": 240,
+        "extruder_temp": 200,
+        "bed_temp": 50,
+        "description": "eSUN Wood Filled PLA"
+      }
+    },
+    "SUNLU": {
+      "PLA": {
+        "spool_weight": 220,
+        "extruder_temp": 200,
+        "bed_temp": 60,
+        "description": "SUNLU PLA"
+      },
+      "PLA+": {
+        "spool_weight": 220,
+        "extruder_temp": 210,
+        "bed_temp": 60,
+        "description": "SUNLU PLA+"
+      },
+      "PETG": {
+        "spool_weight": 220,
+        "extruder_temp": 240,
+        "bed_temp": 80,
+        "description": "SUNLU PETG"
+      },
+      "ABS": {
+        "spool_weight": 220,
+        "extruder_temp": 250,
+        "bed_temp": 90,
+        "description": "SUNLU ABS"
+      },
+      "SILK PLA": {
+        "spool_weight": 220,
+        "extruder_temp": 200,
+        "bed_temp": 60,
+        "description": "SUNLU SILK PLA"
+      }
+    },
+    "Polymaker": {
+      "PolyLite PLA": {
+        "spool_weight": 200,
+        "extruder_temp": 230,
+        "bed_temp": 60,
+        "description": "Polymaker PolyLite PLA"
+      },
+      "PolyLite PETG": {
+        "spool_weight": 200,
+        "extruder_temp": 230,
+        "bed_temp": 70,
+        "description": "Polymaker PolyLite PETG"
+      },
+      "PolyLite ABS": {
+        "spool_weight": 200,
+        "extruder_temp": 250,
+        "bed_temp": 80,
+        "description": "Polymaker PolyLite ABS"
+      },
+      "PolyTerra PLA": {
+        "spool_weight": 147,
+        "extruder_temp": 230,
+        "bed_temp": 60,
+        "description": "Polymaker PolyTerra PLA (Eco-friendly cardboard spool)"
+      }
+    },
+    "Generic": {
+      "PLA": {
+        "spool_weight": 250,
+        "extruder_temp": 200,
+        "bed_temp": 60,
+        "description": "Generic PLA filament"
+      },
+      "PETG": {
+        "spool_weight": 250,
+        "extruder_temp": 240,
+        "bed_temp": 80,
+        "description": "Generic PETG filament"
+      },
+      "ABS": {
+        "spool_weight": 250,
+        "extruder_temp": 240,
+        "bed_temp": 90,
+        "description": "Generic ABS filament"
+      },
+      "TPU": {
+        "spool_weight": 250,
+        "extruder_temp": 220,
+        "bed_temp": 45,
+        "description": "Generic TPU filament"
+      }
+    }
+  },
+  "material_defaults": {
+    "PLA": {
+      "density": 1.24,
+      "spool_weight": 250,
+      "extruder_temp": 220,
+      "bed_temp": 60
+    },
+    "PETG": {
+      "density": 1.27,
+      "spool_weight": 250,
+      "extruder_temp": 240,
+      "bed_temp": 80
+    },
+    "ABS": {
+      "density": 1.04,
+      "spool_weight": 250,
+      "extruder_temp": 240,
+      "bed_temp": 90
+    },
+    "ASA": {
+      "density": 1.07,
+      "spool_weight": 250,
+      "extruder_temp": 250,
+      "bed_temp": 90
+    },
+    "TPU": {
+      "density": 1.20,
+      "spool_weight": 250,
+      "extruder_temp": 220,
+      "bed_temp": 45
+    },
+    "WOOD": {
+      "density": 1.28,
+      "spool_weight": 250,
+      "extruder_temp": 200,
+      "bed_temp": 50
+    },
+    "SILK": {
+      "density": 1.24,
+      "spool_weight": 250,
+      "extruder_temp": 210,
+      "bed_temp": 60
+    }
+  }
+}

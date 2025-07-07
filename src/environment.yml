@@ -1,0 +1,17 @@
+name: spoolman-importer
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - requests
+  - python-dotenv
+  - pytest
+  - pytest-mock
+  - pytest-cov
+  - flake8
+  - black
+  - pip
+  - pip:
+    - PyPDF2
+    - openai

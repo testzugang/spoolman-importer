@@ -1,0 +1,29 @@
+[
+  {
+    "brand": "Bambu Lab",
+    "material": "PLA Basic",
+    "color": "Gray",
+    "diameter": 1.75,
+    "weight": 1000,
+    "price": 13.99,
+    "quantity": 1
+  },
+  {
+    "brand": "Bambu Lab",
+    "material": "PLA Matte",
+    "color": "Matte Dark Blue",
+    "diameter": 1.75,
+    "weight": 1000,
+    "price": 13.99,
+    "quantity": 1
+  },
+  {
+    "brand": "Bambu Lab",
+    "material": "PLA-CF",
+    "color": "Lava Gray",
+    "diameter": 1.75,
+    "weight": 1000,
+    "price": 29.99,
+    "quantity": 1
+  }
+]
