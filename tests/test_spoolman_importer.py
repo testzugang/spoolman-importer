@@ -1,6 +1,9 @@
 
 import unittest
 from unittest.mock import patch, MagicMock
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent))
 from src.spoolman_importer import SpoolmanImporter
 
 class TestSpoolmanImporter(unittest.TestCase):
@@ -60,17 +63,22 @@ class TestSpoolmanImporter(unittest.TestCase):
             text = self.importer.extract_text_from_pdf('dummy.pdf')
             self.assertEqual(text.strip(), "Sample PDF text")
 
+    @patch('builtins.input', side_effect=['m', '#123456'])
     @patch('requests.post')
     @patch('requests.get')
-    def test_process_receipt_json(self, mock_get, mock_post):
+    def test_process_receipt_json_missing_color_manual_input(self, mock_get, mock_post, mock_input):
         # Mock API responses
         mock_get.return_value.json.return_value = [{'id': 1, 'name': 'TestVendor'}]
         mock_post.return_value.raise_for_status.return_value = None
-        mock_post.return_value.json.return_value = {'id': 1}
+        mock_post.return_value.json.return_value = {'id': 101} # Filament ID
 
-        with patch('builtins.open', new_callable=unittest.mock.mock_open, read_data='[{"brand": "TestVendor", "material": "PLA", "color": "Red"}]'):
-            success = self.importer.process_receipt(json_path='dummy.json', vendor_name='TestVendor')
+        with patch('builtins.open', new_callable=unittest.mock.mock_open, read_data='[{"brand": "TestVendor", "material": "PLA", "color": "Custom Color", "quantity": 1, "weight": 1000, "diameter": 1.75}]'):
+            success = self.importer.process_receipt(json_path='dummy.json')
             self.assertTrue(success)
+
+            # Verify the filament creation payload
+            filament_call = mock_post.call_args_list[0]
+            self.assertEqual(filament_call.kwargs['json']['color_hex'], '#123456')
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,0 +1,19 @@
+{
+  "colors": {
+    "black": "#000000",
+    "blue": "#0000FF",
+    "brown": "#A52A2A",
+    "gold": "#FFD700",
+    "gray": "#808080",
+    "green": "#00FF00",
+    "orange": "#FFA500",
+    "peanut": "#7A3F32",
+    "pink": "#FFC0CB",
+    "purple": "#800080",
+    "red": "#FF0000",
+    "silver": "#C0C0C0",
+    "transparent": "#FFFFFF",
+    "white": "#FFFFFF",
+    "yellow": "#FFFF00"
+  }
+}

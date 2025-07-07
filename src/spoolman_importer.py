@@ -22,6 +22,23 @@ class SpoolmanImporter:
         self.spoolman_url = spoolman_url.rstrip('/')
         self.client = OpenAI(api_key=openai_api_key) if openai_api_key else None
         self.vendor_data = self.load_vendor_data()
+        self.color_data = self.load_color_data()
+
+    def load_color_data(self) -> Dict:
+        """Load color name to hex code mapping from JSON file."""
+        try:
+            script_dir = Path(__file__).parent
+            color_data_path = script_dir / "resources" / "color-data.json"
+            if color_data_path.exists():
+                with open(color_data_path, 'r', encoding='utf-8') as file:
+                    return json.load(file)
+            else:
+                print("Warning: Color data file not found. Hex codes will not be set.")
+                return {"colors": {}}
+        except Exception as e:
+            print(f"Error loading color data: {e}")
+            return {"colors": {}}
+
 
     def load_vendor_data(self) -> Dict:
         """Load vendor-specific filament data from JSON file"""
@@ -310,58 +327,119 @@ JSON array:
         # Create new vendor
         return self.create_vendor(vendor_name)
 
-    def create_filament(self, filament_data: Dict, vendor_id: int) -> bool:
-        """Create filament in Spoolman"""
+    def create_filament(self, filament_data: Dict, vendor_id: int, interactive: bool = True) -> bool:
+        """Create filament and its associated spools in Spoolman."""
         try:
-            # Map our data to Spoolman API format
+            # 1. Create the filament type
             spoolman_data = {
                 "vendor_id": vendor_id,
-                "name": f"{filament_data['brand']} {filament_data['material']} {filament_data['color']}",
-                "material": filament_data['material'],
-                "color_hex": None,  # Could be enhanced with color mapping
+                "name": f"{filament_data['material']} {filament_data['color']}",
+                "material": filament_data.get('material'),
+                "color_hex": self.get_color_hex(filament_data['color'], interactive=interactive),
                 "diameter": filament_data['diameter'],
                 "weight": filament_data['weight'],
-                "price": filament_data['price'],
+                "price": filament_data.get('price'),
                 "density": filament_data.get('density') or self.get_material_density(filament_data['material']),
-                "article_number": None,
                 "comment": self.build_comment(filament_data)
             }
+            
+            # Remove None values, as Spoolman API might not like them
+            spoolman_data = {k: v for k, v in spoolman_data.items() if v is not None}
 
             response = requests.post(f"{self.spoolman_url}/api/v1/filament", json=spoolman_data)
             response.raise_for_status()
-
             filament_id = response.json()['id']
+            print(f"Successfully created filament type: {spoolman_data['name']}")
 
-            # Create spool instances
+            # 2. Create spool instances for the filament
             for i in range(filament_data.get('quantity', 1)):
                 spool_data = {
                     "filament_id": filament_id,
                     "remaining_weight": filament_data['weight'],
-                    "used_weight": 0,
-                    "first_used": None,
-                    "last_used": None,
                     "comment": f"Spool {i + 1} of {filament_data.get('quantity', 1)}"
                 }
-
-                # Add spool weight if available
                 if filament_data.get('spool_weight'):
                     spool_data["spool_weight"] = filament_data['spool_weight']
 
                 spool_response = requests.post(f"{self.spoolman_url}/api/v1/spool", json=spool_data)
                 spool_response.raise_for_status()
 
-                spool_info = f"{filament_data['brand']} {filament_data['material']} {filament_data['color']}"
-                if filament_data.get('spool_weight'):
-                    spool_info += f" (spool: {filament_data['spool_weight']}g)"
-                if filament_data.get('extruder_temp'):
-                    spool_info += f" (ext: {filament_data['extruder_temp']}°C, bed: {filament_data['bed_temp']}°C)"
-                print(f"Created spool {i + 1}: {spool_info}")
+                print(f"  - Created spool {i + 1}/{filament_data.get('quantity', 1)}")
 
             return True
 
-        except Exception as e:
-            print(f"Error creating filament: {e}")
+        except requests.exceptions.HTTPError as e:
+            print(f"Error creating filament/spool: {e.response.status_code} {e.response.reason}")
+            try:
+                # Try to print the detailed error message from Spoolman
+                error_details = e.response.json()
+                print("  - API Response:", json.dumps(error_details, indent=2))
+                if "json" in error_details and "spool_weight" in error_details["json"]:
+                    print("  - Possible cause: The 'spool_weight' might be invalid or in the wrong format.")
+            except json.JSONDecodeError:
+                print("  - API Response (text):", e.response.text)
             return False
+        except Exception as e:
+            print(f"An unexpected error occurred during filament creation: {e}")
+            return False
+
+    def get_color_hex(self, color_name: str, interactive: bool = True) -> Optional[str]:
+        """Find the hex code for a given color name, with interactive fallback."""
+        if not color_name:
+            return None
+        
+        color_name_lower = color_name.lower()
+        colors = self.color_data.get("colors", {})
+
+        # Try exact match
+        if color_name_lower in colors:
+            return colors[color_name_lower]
+
+        # Try partial match
+        for name, hex_code in colors.items():
+            if name in color_name_lower:
+                return hex_code
+        
+        # If no match and interactive, ask the user
+        if interactive:
+            return self.handle_missing_color(color_name)
+            
+        return None
+
+    def handle_missing_color(self, color_name: str) -> Optional[str]:
+        """Handle case where a color name cannot be matched to a hex code."""
+        print(f"\nWarning: No hex code found for color '{color_name}'")
+        
+        print("\nOptions:")
+        print("  r) Reload color-data.json file")
+        print("  m) Manually enter hex code (e.g., #FF0000)")
+        print("  o) Omit color (will not be set in Spoolman)")
+        print("  s) Stop import")
+
+        while True:
+            choice = input("\nChoose option [r/m/o/s]: ").strip().lower()
+
+            if choice == 'r':
+                print("Reloading color data...")
+                self.color_data = self.load_color_data()
+                return self.get_color_hex(color_name, interactive=False) # Retry non-interactively
+
+            elif choice == 'm':
+                while True:
+                    hex_code = input("Enter hex code: ").strip()
+                    if re.match(r'^#[0-9a-fA-F]{6}$', hex_code):
+                        return hex_code
+                    print("Invalid format. Please use #RRGGBB format.")
+
+            elif choice == 'o':
+                print("Omitting color for this filament.")
+                return None
+            
+            elif choice == 's':
+                print("Import stopped by user.")
+                sys.exit(1)
+
+            print("Invalid choice. Please try again.")
 
     def build_comment(self, filament_data: Dict) -> str:
         """Build comment field with temperature and vendor info"""
@@ -395,7 +473,7 @@ JSON array:
         }
         return fallback_densities.get(base_material, 1.24)
 
-    def load_filaments_from_json(self, json_path: str, dry_run: bool = False) -> List[Dict]:
+    def load_filaments_from_json(self, json_path: str) -> List[Dict]:
         """Load filament data from JSON file"""
         try:
             with open(json_path, 'r', encoding='utf-8') as file:
@@ -417,37 +495,17 @@ JSON array:
                     print(f"Warning: Skipping invalid filament at index {i}")
                     continue
 
-                # Set defaults for missing fields and get vendor data
-                base_filament = {
+                # Set defaults for missing fields
+                validated_filament = {
                     'brand': filament.get('brand', 'Unknown'),
                     'material': filament.get('material', 'PLA'),
                     'color': filament.get('color', 'Unknown'),
                     'diameter': float(filament.get('diameter', 1.75)),
                     'weight': float(filament.get('weight', 1000)),
                     'price': float(filament.get('price', 0.0)),
-                    'quantity': int(filament.get('quantity', 1))
+                    'quantity': int(filament.get('quantity', 1)),
+                    'spool_weight': float(filament['spool_weight']) if filament.get('spool_weight') else None
                 }
-
-                # Get vendor-specific data
-                vendor_data = self.get_vendor_filament_data(
-                    base_filament['brand'],
-                    base_filament['material'],
-                    interactive=not dry_run  # Don't prompt during dry run
-                )
-
-                # Handle user choosing to stop import
-                if vendor_data is None:
-                    return False
-
-                # Use provided spool_weight or fall back to vendor data
-                validated_filament = base_filament.copy()
-                validated_filament['spool_weight'] = (
-                    float(filament['spool_weight']) if filament.get('spool_weight')
-                    else vendor_data.get('spool_weight')
-                )
-                validated_filament['extruder_temp'] = vendor_data.get('extruder_temp')
-                validated_filament['bed_temp'] = vendor_data.get('bed_temp')
-                validated_filament['vendor_description'] = vendor_data.get('description')
                 validated_filaments.append(validated_filament)
 
             return validated_filaments
@@ -467,7 +525,7 @@ JSON array:
         """Process a receipt PDF or JSON file and import filaments"""
         if json_path:
             print(f"Processing JSON file: {json_path}")
-            filaments = self.load_filaments_from_json(json_path, dry_run=dry_run)
+            filaments = self.load_filaments_from_json(json_path)
         elif pdf_path:
             print(f"Processing receipt: {pdf_path}")
 
@@ -494,61 +552,78 @@ JSON array:
             print("No filaments found")
             return False
 
-        print(f"Found {len(filaments)} filament(s):")
+        print(f"Found {len(filaments)} filament(s) to process:")
         for i, filament in enumerate(filaments, 1):
-            spool_info = f"{filament['brand']} {filament['material']} {filament['color']} - {filament['price']}€"
-            if filament.get('spool_weight'):
-                spool_info += f" (spool: {filament['spool_weight']}g)"
-            if filament.get('extruder_temp'):
-                spool_info += f" (ext: {filament['extruder_temp']}°C, bed: {filament['bed_temp']}°C)"
-            print(f"  {i}. {spool_info}")
+            print(f"  {i}. {filament['brand']} {filament['material']} {filament['color']}")
 
         if dry_run:
-            print("Dry run - no data imported")
+            print("\n--- DRY RUN ---")
+            print("The following actions would be taken:")
+            for filament in filaments:
+                vendor_data = self.get_vendor_filament_data(
+                    filament['brand'],
+                    filament['material'],
+                    interactive=False  # Never prompt in dry run
+                )
+                if vendor_data:
+                    filament.update(vendor_data)
+                
+                vendor_to_use = filament['brand'] or vendor_name
+                print(f"  - Get or create vendor: '{vendor_to_use}'")
+                print(f"  - Create filament: {filament['brand']} {filament['material']} {filament['color']}")
+                for i in range(filament.get('quantity', 1)):
+                    print(f"    - Create spool {i+1}/{filament.get('quantity', 1)}")
+            print("--- END DRY RUN ---")
             return True
 
-        # Get or create vendor
-        if not vendor_name:
-            vendor_name = input("Enter vendor name: ")
-
-        vendor_id = self.get_or_create_vendor(vendor_name)
-        if not vendor_id:
-            print("Failed to create/get vendor")
-            return False
-
-        # Import filaments
+        # --- Interactive Import ---
         success_count = 0
         for filament in filaments:
-            # Get vendor-specific data for each filament
+            # Determine vendor for this specific filament
+            vendor_to_use = filament['brand'] or vendor_name
+            if not vendor_to_use:
+                vendor_to_use = input(f"Enter vendor for {filament['material']} {filament['color']}: ")
+            
+            # Get vendor-specific data
             vendor_data = self.get_vendor_filament_data(
-                filament['brand'],
+                vendor_to_use,
                 filament['material'],
-                interactive=not dry_run  # Don't prompt during dry run
+                interactive=True
             )
 
-            # Handle user choosing to stop import
             if vendor_data is None:
-                print("Import stopped by user")
-                break
+                print(f"Skipping filament: {filament['brand']} {filament['material']}")
+                continue
 
-            # Update filament data with vendor information if not already present
-            if not filament.get('spool_weight'):
+            # Enrich filament data with vendor info
+            filament.update(vendor_data)
+            if filament.get('spool_weight') is None:
                 filament['spool_weight'] = vendor_data.get('spool_weight')
-            if not filament.get('extruder_temp'):
-                filament['extruder_temp'] = vendor_data.get('extruder_temp')
-            if not filament.get('bed_temp'):
-                filament['bed_temp'] = vendor_data.get('bed_temp')
-            if not filament.get('vendor_description'):
-                filament['vendor_description'] = vendor_data.get('description')
 
-            if self.create_filament(filament, vendor_id):
+            # Get or create vendor in Spoolman
+            vendor_id = self.get_or_create_vendor(vendor_to_use)
+            if not vendor_id:
+                print(f"Failed to get or create vendor '{vendor_to_use}'. Skipping filament.")
+                continue
+
+            # Create filament and spools in Spoolman
+            if self.create_filament(filament, vendor_id, interactive=not dry_run):
                 success_count += 1
 
-        print(f"Successfully imported {success_count}/{len(filaments)} filaments")
+        print(f"\nSuccessfully imported {success_count}/{len(filaments)} filaments")
         return success_count > 0
 
 
+import os
+from dotenv import load_dotenv
+
+# ... (rest of the imports)
+
+# ... (class definition)
+
 def main():
+    load_dotenv()  # Load environment variables from .env file
+
     parser = argparse.ArgumentParser(description='Import filaments from PDF receipts or JSON files to Spoolman')
 
     # Create mutually exclusive group for input source
@@ -556,13 +631,19 @@ def main():
     input_group.add_argument('--pdf', help='Path to PDF receipt file')
     input_group.add_argument('--json', help='Path to JSON file containing filament data')
 
-    parser.add_argument('--spoolman-url', default='http://localhost:7912',
-                        help='Spoolman URL (default: http://localhost:7912)')
-    parser.add_argument('--vendor', help='Vendor name (will prompt if not provided)')
-    parser.add_argument('--openai-key', help='OpenAI API key for LLM extraction (PDF only)')
+    parser.add_argument('--spoolman-url', 
+                        default=os.getenv('SPOOLMAN_URL', 'http://localhost:7912'),
+                        help='Spoolman URL. Defaults to SPOOLMAN_URL env var or http://localhost:7912')
+    parser.add_argument('--vendor', help='Fallback vendor name if not specified in the input file')
+    parser.add_argument('--openai-key', 
+                        default=os.getenv('OPENAI_API_KEY'),
+                        help='OpenAI API key. Defaults to OPENAI_API_KEY env var.')
     parser.add_argument('--dry-run', action='store_true', help='Extract data but do not import')
 
     args = parser.parse_args()
+    
+    # ... (rest of the function)
+
 
     # Check file existence
     if args.pdf and not Path(args.pdf).exists():
