@@ -64,22 +64,22 @@ conda activate spoolman-importer
 pip install -r requirements.txt
 ```
 
-### Project Structure
+## Project Structure
 
 ```
 spoolman-importer/
 ├── src/
-│   └── spoolman_importer.py      # Main script
-│   └── environment.yml               # Conda environment definition
-│   └── requirements.txt              # Pip requirements file
-│   └── requirements-dev.txt          # Development requirements
+│   ├── spoolman_importer.py      # Main script
+│   ├── environment.yml           # Conda environment definition
+│   ├── requirements.txt          # Pip requirements file
+│   └── requirements-dev.txt      # Development requirements
 ├── tests/
 │   └── test_spoolman_importer.py # Unit tests
 ├── resources/
 │   └── vendor-data.json          # Vendor filament database
 ├── examples/
-│   └── filaments.json            # Example JSON input
-└── README.md                     # This file
+│   └── 250603-Bambu.json         # Example JSON input
+└── ReadMe.md                     # This file
 ```
 
 ## Quick Start
@@ -88,13 +88,13 @@ spoolman-importer/
 2. **Create and activate conda environment**:
    ```bash
    # Option 1: Using environment.yml (recommended)
-   conda env create -f environment.yml
+   conda env create -f src/environment.yml
    conda activate spoolman-importer
    
    # Option 2: Manual setup
    conda create -n spoolman-importer python=3.9
    conda activate spoolman-importer
-   pip install -r requirements.txt
+   pip install -r src/requirements.txt
    ```
 3. **Configure environment** (optional):
    ```bash
@@ -105,7 +105,7 @@ spoolman-importer/
 4. **Ensure Spoolman is running** on your network
 5. **Import from JSON**:
    ```bash
-   python spoolman_importer.py --json examples/filaments.json --vendor "Bambu Lab"
+   python src/spoolman_importer.py --json examples/250603-Bambu.json --vendor "Bambu Lab"
    ```
 
 ### Environment Management
@@ -121,7 +121,7 @@ conda activate spoolman-importer
 conda deactivate
 
 # Update environment from environment.yml
-conda env update -f environment.yml
+conda env update -f src/environment.yml
 
 # Remove environment
 conda env remove -n spoolman-importer
@@ -138,21 +138,21 @@ conda activate spoolman-importer
 
 ```bash
 # Import from JSON file
-python spoolman_importer.py --json filaments.json --vendor "Prusa"
+python src/spoolman_importer.py --json examples/250603-Bambu.json --vendor "Prusa"
 
 # Import from PDF receipt (requires OpenAI API key)
-python spoolman_importer.py --pdf receipt.pdf --vendor "Amazon"
+python src/spoolman_importer.py --pdf receipt.pdf --vendor "Amazon"
 
 # Using environment variables
 export SPOOLMAN_URL=http://192.168.1.100:7912
 export OPENAI_API_KEY=sk-your-api-key-here
-python spoolman_importer.py --json filaments.json --vendor "Bambu Lab"
+python src/spoolman_importer.py --json examples/250603-Bambu.json --vendor "Bambu Lab"
 
 # Dry run to preview what would be imported
-python spoolman_importer.py --json filaments.json --vendor "Bambu Lab" --dry-run
+python src/spoolman_importer.py --json examples/250603-Bambu.json --vendor "Bambu Lab" --dry-run
 
 # Custom Spoolman URL
-python spoolman_importer.py --json filaments.json --spoolman-url http://192.168.1.100:7912
+python src/spoolman_importer.py --json examples/250603-Bambu.json --spoolman-url http://192.168.1.100:7912
 ```
 
 ### Command Line Options
@@ -207,7 +207,7 @@ python spoolman_importer.py --json filaments.json --spoolman-url http://192.168.
 
 ## Vendor Database
 
-The script includes a comprehensive vendor database (`resources/vendor-data.json`) with specifications for major filament manufacturers:
+The script includes a comprehensive vendor database (`src/resources/vendor-data.json`) with specifications for major filament manufacturers:
 
 ### Supported Vendors
 
@@ -250,35 +250,16 @@ Choose option [r/s/1-7]:
 
 ## Testing
 
-### Running Tests with unittest
-
-To run the test suite, first install the test dependencies:
+To run the test suite, first install the test dependencies from `src/requirements-dev.txt`.
 
 ```bash
-pip install pytest pytest-mock
+pip install -r src/requirements-dev.txt
 ```
 
 Then, run the tests using the following command:
 
 ```bash
 python -m unittest tests/test_spoolman_importer.py
-```
-
-### Running Tests with pytest
-
-```bash
-# Install test dependencies
-pip install pytest pytest-mock
-
-# Run all tests
-python -m pytest -v
-
-# Run specific test class
-python -m pytest test_spoolman_importer.py::TestSpoolmanImporter -v
-
-# Run with coverage
-pip install pytest-cov
-python -m pytest --cov=src --cov-report=html
 ```
 
 ## Configuration
@@ -300,7 +281,7 @@ export SPOOLMAN_URL="http://192.168.1.100:7912"
 export OPENAI_API_KEY="sk-your-openai-api-key-here"
 
 # Run the script (no need to specify URL or key)
-python spoolman_importer.py --json filaments.json --vendor "Bambu Lab"
+python src/spoolman_importer.py --json examples/250603-Bambu.json --vendor "Bambu Lab"
 ```
 
 ### Method 2: .env File (Recommended)
@@ -340,7 +321,7 @@ Command line arguments always take precedence over environment variables:
 
 ```bash
 # Override environment variables
-python spoolman_importer.py --json filaments.json \
+python src/spoolman_importer.py --json examples/250603-Bambu.json \
   --spoolman-url http://different-server:7912 \
   --openai-key sk-different-key \
   --vendor "Bambu Lab"
@@ -365,7 +346,7 @@ Configuration:
 
 ### Vendor Data Customization
 
-Edit `resources/vendor-data.json` to:
+Edit `src/resources/vendor-data.json` to:
 
 - Add new vendors
 - Update existing specifications
@@ -415,7 +396,7 @@ Edit `resources/vendor-data.json` to:
 ### Common Issues
 
 **1. "No vendor data found" warnings**
-- Solution: Update `resources/vendor-data.json` with your vendor
+- Solution: Update `src/resources/vendor-data.json` with your vendor
 - Alternative: Choose from available material defaults
 
 **2. "Connection refused" errors**
@@ -426,7 +407,7 @@ Edit `resources/vendor-data.json` to:
 **3. "Module not found" errors**
 - Activate conda environment: `conda activate spoolman-importer`
 - Check if dependencies are installed: `conda list`
-- Reinstall dependencies: `pip install -r requirements.txt`
+- Reinstall dependencies: `pip install -r src/requirements.txt`
 
 **3. PDF processing fails**
 - Ensure OpenAI API key is valid
@@ -463,7 +444,7 @@ conda activate spoolman-importer
 
 # Process all JSON files in a directory
 for file in receipts/*.json; do
-    python spoolman_importer.py --json "$file" --vendor "Auto"
+    python src/spoolman_importer.py --json "$file" --vendor "Auto"
 done
 ```
 
@@ -473,9 +454,9 @@ done
 ### Adding New Vendors
 
 1. Research vendor specifications (spool weight, temperatures)
-2. Add to `resources/vendor-data.json`
+2. Add to `src/resources/vendor-data.json`
 3. Test with sample data
-4. Add test cases to `test_spoolman_importer.py`
+4. Add test cases to `tests/test_spoolman_importer.py`
 
 ### Reporting Issues
 
@@ -494,24 +475,24 @@ git clone <repository-url>
 cd spoolman-importer
 
 # Create and activate conda environment
-conda env create -f environment.yml
+conda env create -f src/environment.yml
 conda activate spoolman-importer
 
 # Or create manually
 conda create -n spoolman-importer python=3.9
 conda activate spoolman-importer
-pip install -r requirements-dev.txt
+pip install -r src/requirements-dev.txt
 
 # Create development .env file
 cp .env.example .env
 # Edit .env with your development settings
 
 # Run tests
-python -m pytest test_spoolman_importer.py -v
+python -m unittest tests/test_spoolman_importer.py
 
 # Run linting
-flake8 spoolman_importer.py
-black spoolman_importer.py
+flake8 src/spoolman_importer.py
+black src/spoolman_importer.py
 
 # Check conda environment
 conda list
@@ -525,7 +506,7 @@ This project is open source. See LICENSE file for details.
 
 - [Spoolman](https://github.com/Donkie/Spoolman) - Excellent 3D printer filament management system
 - [OpenAI](https://openai.com) - GPT API for intelligent text extraction
-- [PyPDF2](https://pypdf2.readthedocs.io/) - PDF text extraction
+- [pypdf](https://pypdf.readthedocs.io/) - PDF text extraction
 - Community contributors for vendor data and testing
 
 ## Support
