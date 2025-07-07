@@ -71,6 +71,12 @@
       }
     },
     "eSUN": {
+      "PLA Basic": {
+        "spool_weight": 240,
+        "extruder_temp": 210,
+        "bed_temp": 60,
+        "description": "eSUN PLA Basic"
+      },
       "PLA+": {
         "spool_weight": 240,
         "extruder_temp": 210,

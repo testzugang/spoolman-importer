@@ -25,9 +25,11 @@ class SpoolmanImporter:
 
     def load_vendor_data(self) -> Dict:
         """Load vendor-specific filament data from JSON file"""
-        vendor_data_path = Path("resources/vendor-data.json")
-
         try:
+            # Construct path relative to this script's location
+            script_dir = Path(__file__).parent
+            vendor_data_path = script_dir / "resources" / "vendor-data.json"
+
             if vendor_data_path.exists():
                 with open(vendor_data_path, 'r', encoding='utf-8') as file:
                     return json.load(file)
@@ -45,22 +47,30 @@ class SpoolmanImporter:
         material_defaults = self.vendor_data.get("material_defaults", {})
 
         # Normalize brand and material names for matching
-        brand_normalized = brand.strip()
+        brand_normalized = brand.strip().lower()
         material_normalized = material.upper().strip()
 
         vendor_data = None
 
         # Try exact brand match first
-        if brand_normalized in vendors:
-            vendor_materials = vendors[brand_normalized]
+        if brand_normalized in (vendor.lower() for vendor in vendors):
+            # Find the correct brand name with original casing
+            for vendor_name_original in vendors:
+                if vendor_name_original.lower() == brand_normalized:
+                    brand_name_matched = vendor_name_original
+                    break
+            
+            vendor_materials = vendors[brand_name_matched]
 
-            # Try exact material match
-            if material_normalized in vendor_materials:
-                vendor_data = vendor_materials[material_normalized].copy()
+            # Try case-insensitive material match
+            for vendor_material, data in vendor_materials.items():
+                if vendor_material.lower() == material_normalized.lower():
+                    vendor_data = data.copy()
+                    break
             else:
                 # Try partial material matches (e.g., "PLA Basic" matches "PLA")
                 for vendor_material, data in vendor_materials.items():
-                    if material_normalized in vendor_material.upper():
+                    if material_normalized.lower() in vendor_material.lower():
                         vendor_data = data.copy()
                         break
 
@@ -113,6 +123,11 @@ class SpoolmanImporter:
     def handle_missing_vendor_data(self, brand: str, material: str, material_defaults: Dict) -> Dict:
         """Handle case where vendor-specific data is not found"""
         print(f"\nWarning: No vendor data found for '{brand}' - '{material}'")
+
+        # Show available vendors for debugging
+        print("\nAvailable vendors in vendor-data.json:")
+        for vendor_name in self.vendor_data.get("vendors", {}):
+            print(f"  - {vendor_name}")
 
         # Show available material defaults
         print("\nAvailable default material types:")
