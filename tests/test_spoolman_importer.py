@@ -80,6 +80,37 @@ class TestSpoolmanImporter(unittest.TestCase):
     @patch('src.spoolman_importer.SpoolmanImporter.get_or_create_vendor', return_value=1)
     @patch('requests.post')
     @patch('requests.get')
+    def test_import_filament_with_temperatures(self, mock_get, mock_post, mock_get_or_create_vendor):
+        # Mock API responses
+        mock_get.return_value = MagicMock(
+            json=lambda: [])  # No existing filaments or spools
+        mock_post.return_value = MagicMock(status_code=200, json=lambda: {'id': 102})
+
+        filament_data = {
+            "brand": "TestVendor",
+            "material": "PLA",
+            "color": "Blue",
+            "diameter": 1.75,
+            "weight": 1000,
+            "price": 25.0,
+            "quantity": 1,
+            "extruder_temp": 215,
+            "bed_temp": 65,
+            "spool_weight": 200
+        }
+
+        self.importer.import_filament(filament_data, 1, [], 'dummy.json', interactive=False)
+
+        # Check the call to create the filament
+        filament_creation_call = mock_post.call_args_list[0]
+        self.assertEqual(filament_creation_call.args[0], 'http://localhost:7912/api/v1/filament')
+        sent_json = filament_creation_call.kwargs['json']
+        self.assertEqual(sent_json['settings_extruder_temp'], 215)
+        self.assertEqual(sent_json['settings_bed_temp'], 65)
+
+    @patch('src.spoolman_importer.SpoolmanImporter.get_or_create_vendor', return_value=1)
+    @patch('requests.post')
+    @patch('requests.get')
     def test_reimport_skips_duplicate_spools(self, mock_get, mock_post, mock_get_or_create_vendor):
         # Mock API responses
         mock_get.side_effect = [

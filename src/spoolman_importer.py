@@ -360,7 +360,9 @@ JSON array:
                     "weight": filament_data['weight'],
                     "price": filament_data.get('price'),
                     "density": filament_data.get('density') or self.get_material_density(filament_data['material']),
-                    "comment": self.build_comment(filament_data)
+                    "comment": self.build_comment(filament_data),
+                    "settings_extruder_temp": filament_data.get('extruder_temp'),
+                    "settings_bed_temp": filament_data.get('bed_temp')
                 }
                 spoolman_data = {k: v for k, v in spoolman_data.items() if v is not None}
                 response = requests.post(f"{self.spoolman_url}/api/v1/filament", json=spoolman_data)
