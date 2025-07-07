@@ -63,22 +63,38 @@ class TestSpoolmanImporter(unittest.TestCase):
             text = self.importer.extract_text_from_pdf('dummy.pdf')
             self.assertEqual(text.strip(), "Sample PDF text")
 
-    @patch('builtins.input', side_effect=['m', '#123456'])
+    def test_get_color_hex(self):
+        # Exact match
+        self.assertEqual(self.importer.get_color_hex("Red", interactive=False), "#FF0000")
+        # Case-insensitive match
+        self.assertEqual(self.importer.get_color_hex("bLaCk", interactive=False), "#000000")
+        # Nuanced match
+        self.assertEqual(self.importer.get_color_hex("Light Blue", interactive=False), "#ADD8E6")
+        # Partial match
+        self.assertEqual(self.importer.get_color_hex("Galaxy Black", interactive=False), "#2E2E2E")
+        # Fallback to base color
+        self.assertEqual(self.importer.get_color_hex("Deep Blue", interactive=False), "#0000FF")
+        # No match
+        self.assertIsNone(self.importer.get_color_hex("Chartreuse", interactive=False))
+
+    @patch('src.spoolman_importer.SpoolmanImporter.get_or_create_vendor', return_value=1)
     @patch('requests.post')
     @patch('requests.get')
-    def test_process_receipt_json_missing_color_manual_input(self, mock_get, mock_post, mock_input):
+    def test_reimport_skips_duplicate_spools(self, mock_get, mock_post, mock_get_or_create_vendor):
         # Mock API responses
-        mock_get.return_value.json.return_value = [{'id': 1, 'name': 'TestVendor'}]
-        mock_post.return_value.raise_for_status.return_value = None
-        mock_post.return_value.json.return_value = {'id': 101} # Filament ID
-
-        with patch('builtins.open', new_callable=unittest.mock.mock_open, read_data='[{"brand": "TestVendor", "material": "PLA", "color": "Custom Color", "quantity": 1, "weight": 1000, "diameter": 1.75}]'):
+        mock_get.side_effect = [
+            # 1. Get existing filaments
+            MagicMock(json=lambda: [{'id': 101, 'name': 'PLA Red', 'vendor': {'id': 1, 'name': 'TestVendor'}}]),
+            # 2. Get existing spools for the filament
+            MagicMock(json=lambda: [{'id': 201, 'comment': 'ImportID: [imported_from:dummy.json|item:TestVendor-PLA-Red-0.0|index:0]'}])
+        ]
+        
+        with patch('builtins.open', new_callable=unittest.mock.mock_open, read_data='[{"brand": "TestVendor", "material": "PLA", "color": "Red", "quantity": 1, "weight": 1000, "diameter": 1.75, "price": 0.0}]'):
             success = self.importer.process_receipt(json_path='dummy.json')
             self.assertTrue(success)
 
-            # Verify the filament creation payload
-            filament_call = mock_post.call_args_list[0]
-            self.assertEqual(filament_call.kwargs['json']['color_hex'], '#123456')
+            # Verify that no new spools were created
+            mock_post.assert_not_called()
 
 if __name__ == '__main__':
     unittest.main()
